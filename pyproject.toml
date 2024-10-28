@@ -6,7 +6,7 @@ requires = [
 
 [project]
 name = "hqm"
-version = "0.0.17"
+version = "0.0.18"
 authors = [
   { name="Alessandro Sebastianelli", email="alessandro.sebastianelli1995@gmail.com" },
 ]
