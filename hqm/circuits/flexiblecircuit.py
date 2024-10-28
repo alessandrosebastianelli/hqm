@@ -17,39 +17,39 @@ class FlexibleCircuit(QuantumCircuit):
         '''
             FlexibleCircuit constructor. 
 
-                                       ^ --> 
-                                       | <--  
-                    ___       ___       ___
-            |0> ---|   | --- |   | --- |   | --- M
-            |0> ---| E | --- | F | --- | U | --- M
-            |0> ---| . | --- |   | --- |   | --- M
-            |0> ---| . | --- |   | --- |   | --- M
-            |0> ---|___| --- |___| --- |___| --- M
+                                       ^ -->   
+                                       | <--    
+                    ___       ___       ___  
+            |0> ---|   | --- |   | --- |   | --- M  
+            |0> ---| E | --- | F | --- | U | --- M  
+            |0> ---| . | --- |   | --- |   | --- M  
+            |0> ---| . | --- |   | --- |   | --- M  
+            |0> ---|___| --- |___| --- |___| --- M  
 
             Where E is the encoding layer, F is a fixed layer and U is a configurable
             and repeating layer. The configuration can be changed via a dictionary. 
             For instance, for a 3 qubits, 2 layers and full measurement circuit:
 
-            config = {
-                'F' : [
-                        ['H', 'CNOT-1'], #Q0
-                        ['H', 'CNOT-2'], #Q1
-                        ['H', 'CNOT-0']  #Q2
-                ],
-                'U' : [
-                        2*['RY', 'CNOT-1', 'RY'], #Q0
-                        2*['RY', 'CNOT-2', 'RY'], #Q1
-                        2*['RY', 'CNOT-0', 'RY']  #Q2
-                ],
-                'M' : [True, True, True]
-            }
+            config = {  
+                'F' : [  
+                        ['H', 'CNOT-1'], #Q0  
+                        ['H', 'CNOT-2'], #Q1  
+                        ['H', 'CNOT-0']  #Q2  
+                ],  
+                'U' : [  
+                        2*['RY', 'CNOT-1', 'RY'], #Q0  
+                        2*['RY', 'CNOT-2', 'RY'], #Q1  
+                        2*['RY', 'CNOT-0', 'RY']  #Q2  
+                ],  
+                'M' : [True, True, True]  
+            }  
 
-            will result in
-                            *===== F ====*======== U1 =========*======== U2 ==========*= M =*
+            will result in  
+                            *===== F ====*======== U1 =========*======== U2 ==========*= M =*  
                     ___              
-            |0> ---|   | --- H - X ----- | - Ry - X ----- | - Ry - Ry - X ----- | - Ry - M0
-            |0> ---| E | --- H - | - X - | - Ry - | - X - | - Ry - Ry - | - X - | - Ry - M1
-            |0> ---|___| --- H ----- | - X - Ry ----- | - X - Ry - Ry ----- | - X - Ry - M2
+            |0> ---|   | --- H - X ----- | - Ry - X ----- | - Ry - Ry - X ----- | - Ry - M0  
+            |0> ---| E | --- H - | - X - | - Ry - | - X - | - Ry - Ry - | - X - | - Ry - M1  
+            |0> ---|___| --- H ----- | - X - Ry ----- | - X - Ry - Ry ----- | - X - Ry - M2  
 
                         
             Parameters:  
