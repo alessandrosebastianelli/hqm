@@ -28,7 +28,8 @@ if __name__ == "__main__":
 
     inputs  = [0, 0, 0]
     print(fc.weight_shape['weights'])
-    weights = np.zeros(fc.weight_shape['weights'])
+    weights = np.arange(fc.weight_shape['weights'])
+    print(weights) 
 
     drawer = qml.draw(fc.circuit)
     print(drawer(inputs, weights))
