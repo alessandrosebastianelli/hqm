@@ -135,7 +135,7 @@ class FlexibleCircuit(QuantumCircuit):
         '''
         @qml.qnode(dev)
         def qnode(inputs : np.ndarray, weights : np.ndarray) -> list:
-            '''
+            '''            
                 PennyLane based quantum circuit composed of an angle embedding, fixed and configurable layers.
 
                 Parameters:  
@@ -156,18 +156,18 @@ class FlexibleCircuit(QuantumCircuit):
             if encoding == 'angle':     qml.AngleEmbedding(inputs, wires=range(n_qubits))
             if encoding == 'amplitude': qml.AmplitudeEmbedding(features=inputs, wires=range(n_qubits), normalize=True)
 
+            ct = 0
             # V component
             V = config['V']
-
             for i in range(V.shape[0]):
                 for j in range(V.shape[1]):
-                    pass
-            
+                    ct = self.__decode_gates(key=V[i][j], qubit=i, weights=weights, ct=ct)
+
             # U Component
             U = config['U']
             for i in range(U.shape[0]):
                 for j in range(U.shape[1]):
-                    pass
+                    ct = self.__decode_gates(key=U[i][j], qubit=i, weights=weights, ct=ct)
 
             # M component
             measurements = []
@@ -178,3 +178,41 @@ class FlexibleCircuit(QuantumCircuit):
             return measurements
     
         return qnode
+
+    def __decode_gates(self, key : str, qubit : int, weights : np.ndarray, ct : int):
+        '''
+            Decode string into qml gate
+
+            Parameters:  
+                -----------  
+                - key : str
+                    string representing gate
+                - qubit : int 
+                    to which qubit apply the gate
+                - weights : np.ndarray  
+                    array containing the weights of the circuit that are tuned during training, the shape of this
+                    array depends on circuit's layers and qubits. 
+                - ct : int
+                    counter that keeps track of weight position
+
+                Returns:  
+                --------  
+                Nothing
+        '''
+
+        if key == 'H':
+            qml.Hadamard(wires=qubit)
+        if key == 'RY':
+            qml.Ry(weights[ct], wires=qubit)
+            ct += 1
+        if key == 'RX':
+            qml.Rx(weights[ct], wires=qubit)
+            ct += 1
+        if key == 'RZ':
+            qml.Rz(weights[ct], wires=qubit)
+            ct += 1
+        if 'CNOT' in key:
+            qx = int(key.split('-')[-1])
+            qml.CNOT(wires=[qubit, qx])
+
+        return ct
