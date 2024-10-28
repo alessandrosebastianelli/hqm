@@ -32,14 +32,14 @@ class FlexibleCircuit(QuantumCircuit):
 
             config = {
                 'F' : [
+                        ['H', 'CNOT-1'], #Q0
                         ['H', 'CNOT-2'], #Q1
-                        ['H', 'CNOT-3'], #Q2
-                        ['H', 'CNOT-1']  #Q3
+                        ['H', 'CNOT-0']  #Q2
                 ],
                 'U' : [
+                        2*['RY', 'CNOT-1', 'RY'], #Q0
                         2*['RY', 'CNOT-2', 'RY'], #Q1
-                        2*['RY', 'CNOT-3', 'RY'], #Q2
-                        2*['RY', 'CNOT-1', 'RY']  #Q3
+                        2*['RY', 'CNOT-0', 'RY']  #Q2
                 ],
                 'M' : [True, True, True]
             }
@@ -47,9 +47,9 @@ class FlexibleCircuit(QuantumCircuit):
             will result in
                             *===== F ====*======== U1 =========*======== U2 ==========*= M =*
                     ___              
-            |0> ---|   | --- H - X ----- | - Ry - X ----- | - Ry - Ry - X ----- | - Ry - M1
-            |0> ---| E | --- H - | - X - | - Ry - | - X - | - Ry - Ry - | - X - | - Ry - M2
-            |0> ---|___| --- H ----- | - X - Ry ----- | - X - Ry - Ry ----- | - X - Ry - M3
+            |0> ---|   | --- H - X ----- | - Ry - X ----- | - Ry - Ry - X ----- | - Ry - M0
+            |0> ---| E | --- H - | - X - | - Ry - | - X - | - Ry - Ry - | - X - | - Ry - M1
+            |0> ---|___| --- H ----- | - X - Ry ----- | - X - Ry - Ry ----- | - X - Ry - M2
 
                         
             Parameters:  
@@ -70,7 +70,7 @@ class FlexibleCircuit(QuantumCircuit):
             --------  
             Nothing, a RealAmplitudesCircuit object will be created.  
         '''
-        super().__init__(n_qubits=n_qubits, n_layers=n_layers, dev=dev)
+        super().__init__(n_qubits=np.shape(config['U'])[0], n_layers=1, dev=dev)
 
         if encoding not in ['angle', 'amplitude']: raise(f"encoding can be angle or amplitude, found {encoding}")
         if 'F' not in config.keys(): raise(f'Config does not contain configuration for circuit F component, found {config.keys()}')
@@ -80,8 +80,6 @@ class FlexibleCircuit(QuantumCircuit):
         self.config       = config
         self.encoding     = encoding
         self.n_qubits     = np.shape(config['U'])[0]
-
-
         self.weight_shape = {"weights": (self.__calculate_weights(config))}
         self.circuit      = self.circ(self.dev, self.n_qubits, self.config, self.encoding)
 
@@ -101,7 +99,7 @@ class FlexibleCircuit(QuantumCircuit):
         '''
         
         ct = 0
-        for el in list(chain(*config['V'])):
+        for el in list(chain(*config['F'])):
             if 'R' in el:
                 ct += 1
         
@@ -110,7 +108,7 @@ class FlexibleCircuit(QuantumCircuit):
                 ct += 1
 
         return ct
-
+    
     @staticmethod
     def circ(dev : qml.devices, n_qubits : int, config: dict, encoding : str) -> FunctionType:
         '''
@@ -158,16 +156,16 @@ class FlexibleCircuit(QuantumCircuit):
 
             ct = 0
             # V component
-            V = config['V']
-            for i in range(V.shape[0]):
-                for j in range(V.shape[1]):
-                    ct = self.__decode_gates(key=V[i][j], qubit=i, weights=weights, ct=ct)
+            V = config['F']
+            for j in range(np.shape(V)[1]):
+                for i in range(np.shape(V)[0]):
+                    ct = decode_gates(key=V[i][j], qubit=i, weights=weights, ct=ct)
 
             # U Component
             U = config['U']
-            for i in range(U.shape[0]):
-                for j in range(U.shape[1]):
-                    ct = self.__decode_gates(key=U[i][j], qubit=i, weights=weights, ct=ct)
+            for j in range(np.shape(U)[1]):
+                for i in range(np.shape(U)[0]):
+                    ct = decode_gates(key=U[i][j], qubit=i, weights=weights, ct=ct)
 
             # M component
             measurements = []
@@ -178,41 +176,41 @@ class FlexibleCircuit(QuantumCircuit):
             return measurements
     
         return qnode
+    
+def decode_gates(key : str, qubit : int, weights : np.ndarray, ct : int):
+    '''
+        Decode string into qml gate
 
-    def __decode_gates(self, key : str, qubit : int, weights : np.ndarray, ct : int):
-        '''
-            Decode string into qml gate
+        Parameters:  
+            -----------  
+            - key : str
+                string representing gate
+            - qubit : int 
+                to which qubit apply the gate
+            - weights : np.ndarray  
+                array containing the weights of the circuit that are tuned during training, the shape of this
+                array depends on circuit's layers and qubits. 
+            - ct : int
+                counter that keeps track of weight position
 
-            Parameters:  
-                -----------  
-                - key : str
-                    string representing gate
-                - qubit : int 
-                    to which qubit apply the gate
-                - weights : np.ndarray  
-                    array containing the weights of the circuit that are tuned during training, the shape of this
-                    array depends on circuit's layers and qubits. 
-                - ct : int
-                    counter that keeps track of weight position
+            Returns:  
+            --------  
+            Nothing
+    '''
 
-                Returns:  
-                --------  
-                Nothing
-        '''
+    if key == 'H':
+        qml.Hadamard(wires=qubit)
+    if key == 'RY':
+        qml.RY(weights[ct], wires=qubit)
+        ct += 1
+    if key == 'RX':
+        qml.RX(weights[ct], wires=qubit)
+        ct += 1
+    if key == 'RZ':
+        qml.RZ(weights[ct], wires=qubit)
+        ct += 1
+    if 'CNOT' in key:
+        qx = int(key.split('-')[-1])
+        qml.CNOT(wires=[qubit, qx])
 
-        if key == 'H':
-            qml.Hadamard(wires=qubit)
-        if key == 'RY':
-            qml.Ry(weights[ct], wires=qubit)
-            ct += 1
-        if key == 'RX':
-            qml.Rx(weights[ct], wires=qubit)
-            ct += 1
-        if key == 'RZ':
-            qml.Rz(weights[ct], wires=qubit)
-            ct += 1
-        if 'CNOT' in key:
-            qx = int(key.split('-')[-1])
-            qml.CNOT(wires=[qubit, qx])
-
-        return ct
+    return ct
