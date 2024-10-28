@@ -2,5 +2,7 @@
    .. include:: ./circuits.md
 """
 
-from .angleencoding import *
+from .amplitudeencoding import *
+from .flexiblecircuit import *
 from .customcircuits import *
+from .angleencoding import *
