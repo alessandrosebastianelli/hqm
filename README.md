@@ -13,7 +13,7 @@ Additionally, the library goes the extra mile by including a set of predefined h
 
 In summary, this library serves as a versatile bridge between the realms of quantum computing and Deep Learning. It equips developers with the tools to harness the capabilities of quantum algorithms while integrating them effortlessly with Tensorflow and Torch. Furthermore, the inclusion of prebuilt hybrid models simplifies the development process for tasks like classification and regression, ultimately enabling the creation of advanced AI solutions that transcend classical computing limitations.
 
-<a class="btn btn-success" href="https://alessandrosebastianelli.github.io/hybrid_quantum_models/hqm.html" target="_blank">Click here to access the documentation</a>
+<a class="btn btn-success" href="https://alessandrosebastianelli.github.io/hqm/hqm.html" target="_blank">Click here to access the documentation</a>
 
 **!!!This library has been developed and tested mostly for QAI4EO (Quantum Artificial Intelligence for Earth Observation) tasks!!!**
 
